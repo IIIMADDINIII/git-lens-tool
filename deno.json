@@ -1,6 +1,6 @@
 {
   "name": "@iiimaddiniii/git-lens-tool",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "exports": {
     ".": "./main.ts"
@@ -16,7 +16,8 @@
     "exclude": [
       ".vscode/",
       "mise.toml",
-      "git-lens-tool.code-workspace"
+      "git-lens-tool.code-workspace",
+      "deno.lock"
     ]
   },
   "fmt": {
