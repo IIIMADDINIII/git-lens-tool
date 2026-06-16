@@ -1,0 +1,25 @@
+{
+  "name": "@iiimaddiniii/git-lens-tool",
+  "version": "0.0.1",
+  "license": "MIT",
+  "exports": {
+    ".": "./main.ts"
+  },
+  "bin": {
+    "git-lens-tool": "./cli.ts"
+  },
+  "imports": {
+    "@cliffy/command": "jsr:@cliffy/command@^1.2.1",
+    "@std/path": "jsr:@std/path@1.1.5"
+  },
+  "publish": {
+    "exclude": [
+      ".vscode/",
+      "mise.toml",
+      "git-lens-tool.code-workspace"
+    ]
+  },
+  "fmt": {
+    "lineWidth": 999999999
+  }
+}
