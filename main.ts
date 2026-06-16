@@ -1,3 +1,19 @@
+/**
+ * This module contains functions to patch the GitLens extension for Visual Studio Code.
+ * Run this with deno to patch the extension in the default location, or provide a path to patch a specific extension or all extensions in a directory.
+ * 
+ * @example
+ * ```cmd
+ * deno x jsr:@iiimaddiniii/git-lens-tool
+ * deno x jsr:@iiimaddiniii/git-lens-tool --vsCodeExtensionsDir=/path/to/vscode/extensions
+ * deno x jsr:@iiimaddiniii/git-lens-tool -D=/path/to/vscode/extensions
+ * deno x jsr:@iiimaddiniii/git-lens-tool --gitLensExtensionDir=/path/to/vscode/extensions/gitlens
+ * deno x jsr:@iiimaddiniii/git-lens-tool -d=/path/to/vscode/extensions/gitlens
+ * ```
+ * 
+ * @module
+ */
+
 import { Command } from "@cliffy/command";
 import { join } from "@std/path";
 import { homedir } from "node:os";
