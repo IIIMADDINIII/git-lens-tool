@@ -1,12 +1,9 @@
 {
   "name": "@iiimaddiniii/git-lens-tool",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "exports": {
     ".": "./main.ts"
-  },
-  "bin": {
-    "git-lens-tool": "./cli.ts"
   },
   "imports": {
     "@cliffy/command": "jsr:@cliffy/command@^1.2.1",
