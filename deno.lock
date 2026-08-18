@@ -9,7 +9,10 @@
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/path@1.1.5": "1.1.5",
     "jsr:@std/semver@^1.0.8": "1.0.8",
-    "jsr:@std/text@^1.0.19": "1.0.19"
+    "jsr:@std/text@^1.0.19": "1.0.19",
+    "npm:acorn-walk@8.3.5": "8.3.5",
+    "npm:acorn@8.18.0": "8.18.0",
+    "npm:astring@1.9.0": "1.9.0"
   },
   "jsr": {
     "@cliffy/command@1.2.1": {
@@ -58,10 +61,29 @@
       "integrity": "003a0e032d360e8c3a4e0410fb792c77a66bd6553fee9d60c6ec1bce30d29223"
     }
   },
+  "npm": {
+    "acorn-walk@8.3.5": {
+      "integrity": "sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw==",
+      "dependencies": [
+        "acorn"
+      ]
+    },
+    "acorn@8.18.0": {
+      "integrity": "sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ==",
+      "bin": true
+    },
+    "astring@1.9.0": {
+      "integrity": "sha512-LElXdjswlqjWrPpJFg1Fx4wpkOCxj1TDHlSV4PlaRxHGWko024xICaa97ZkMfs6DRKlCguiAI+rbXv5GWwXIkg==",
+      "bin": true
+    }
+  },
   "workspace": {
     "dependencies": [
       "jsr:@cliffy/command@^1.2.1",
-      "jsr:@std/path@1.1.5"
+      "jsr:@std/path@1.1.5",
+      "npm:acorn-walk@8.3.5",
+      "npm:acorn@8.18.0",
+      "npm:astring@1.9.0"
     ]
   }
 }

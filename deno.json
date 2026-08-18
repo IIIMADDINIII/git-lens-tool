@@ -1,6 +1,6 @@
 {
   "name": "@iiimaddiniii/git-lens-tool",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "description": "A tool to patch the GitLens extension for Visual Studio Code.",
   "license": "MIT",
   "exports": {
@@ -8,7 +8,10 @@
   },
   "imports": {
     "@cliffy/command": "jsr:@cliffy/command@^1.2.1",
-    "@std/path": "jsr:@std/path@1.1.5"
+    "@std/path": "jsr:@std/path@1.1.5",
+    "acorn": "npm:acorn@8.18.0",
+    "acorn-walk": "npm:acorn-walk@8.3.5",
+    "astring": "npm:astring@1.9.0"
   },
   "publish": {
     "exclude": [
