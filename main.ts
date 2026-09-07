@@ -24,14 +24,25 @@ import * as Ast from "./ast.ts";
 import packageJson from "./deno.json" with { type: "json" };
 
 /**
+ * Prints the specified text to the console if not in silent mode.
+ * @param silent - Whether to suppress output.
+ * @param text - The text to print.
+ */
+function print(silent: boolean, text: string): void {
+  if (!silent) console.log(text);
+}
+
+/**
  * Patches all GitLens extensions found in the specified path.
  * @param path - The path to the directory containing the extensions. Defaults to the user's home directory under ".vscode/extensions".
  */
-export async function patchExtensions(path: string = join(homedir(), ".vscode", "extensions")): Promise<void> {
+export async function patchExtensions(path: string = join(homedir(), ".vscode", "extensions"), silent: boolean = true): Promise<void> {
   for await (const extension of Deno.readDir(path)) {
     if (!extension.isDirectory) continue;
     if (!extension.name.startsWith("eamodio.gitlens-")) continue;
-    await patchExtension(join(path, extension.name));
+    const p = join(path, extension.name);
+    print(silent, `Found GitLens extension at ${p}`);
+    await patchExtension(p, silent);
   }
 }
 
@@ -57,12 +68,12 @@ async function getVersion(path: string): Promise<Version> {
  * Patches the GitLens extension by modifying its JavaScript file.
  * @param path - The path to the GitLens extension directory.
  */
-export async function patchExtension(path: string): Promise<void> {
+export async function patchExtension(path: string, silent: boolean = true): Promise<void> {
   switch (await getVersion(path)) {
     case "~18.3.0":
-      return await patchExtension18_3_0(path);
+      return await patchExtension18_3_0(path, silent);
     case "~19.0.1":
-      return await patchExtension19_0_1(path);
+      return await patchExtension19_0_1(path, silent);
   }
 }
 
@@ -70,23 +81,26 @@ export async function patchExtension(path: string): Promise<void> {
  * Applies the patch for GitLens version 18.3.0 by modifying the "gitlens.js" file.
  * @param path - The path to the GitLens extension directory.
  */
-async function patchExtension18_3_0(path: string): Promise<void> {
+async function patchExtension18_3_0(path: string, silent: boolean): Promise<void> {
   const filePath = join(path, "dist", "gitlens.js");
   const oldContent = await Deno.readTextFile(filePath);
   const newContent = oldContent.replace(/(async\s+visibility\s*\([^\)]\)\s*\{\s*)(if\s*\()/m, (_, prefix, suffix) => `${prefix}return "public";${suffix}`);
   await Deno.writeTextFile(filePath, newContent);
+  print(silent, `Patch applied successfully for GitLens version 18.3.0`);
 }
 
 /**
  * Applies the patch for GitLens version 19.0.1 by modifying the "gitlens.js" file.
  * @param path - The path to the GitLens extension directory.
  */
-async function patchExtension19_0_1(path: string): Promise<void> {
+async function patchExtension19_0_1(path: string, silent: boolean): Promise<void> {
   const filePath = join(path, "dist", "gitlens.js");
   const oldContent = await Deno.readTextFile(filePath);
   const ast = parse(oldContent, { ecmaVersion: "latest", sourceType: "module" });
   let subCount = 0;
   let visCount = 0;
+  let subAppliedCount = 0;
+  let visAppliedCount = 0;
   walk.simple(ast, {
     AssignmentExpression(node) {
       const left = node.left;
@@ -97,6 +111,15 @@ async function patchExtension19_0_1(path: string): Promise<void> {
       if (property.type !== "Identifier") return;
       if (property.name !== "_subscription") return;
       const right = node.right;
+      if (right.type === "SequenceExpression") {
+        // Check if the patch has already been applied
+        if (right.expressions.length !== 2) return;
+        const first = right.expressions[0];
+        const last = right.expressions[1];
+        if (last.type !== "Identifier" || first.type !== "AssignmentExpression" || first.left.type !== "MemberExpression" || first.left.object.type !== "Identifier" || first.left.object.name !== last.name || first.left.property.type !== "Identifier" || first.left.property.name !== "account" || first.right.type !== "LogicalExpression" || first.right.left.type !== "MemberExpression" || first.right.left.object.type !== "Identifier" || first.right.left.object.name !== last.name || first.right.left.property.type !== "Identifier" || first.right.left.property.name !== "account" || first.right.operator !== "??" || first.right.right.type !== "ObjectExpression" || first.right.right.properties.length !== 1 || first.right.right.properties[0].type !== "Property" || first.right.right.properties[0].key.type !== "Identifier" || first.right.right.properties[0].key.name !== "verified" || first.right.right.properties[0].value.type !== "Literal" || first.right.right.properties[0].value.value !== true) return;
+        subAppliedCount++;
+        return;
+      }
       if (right.type !== "Identifier") return;
       subCount++;
       node.right = Ast.sequenceExpression([
@@ -118,14 +141,24 @@ async function patchExtension19_0_1(path: string): Promise<void> {
       if (body.type !== "BlockStatement") return;
       const statements = body.body;
       if (statements.length === 0) return;
-      if (statements[0].type !== "IfStatement") return;
+      const firstStatement = statements[0];
+      if (firstStatement.type === "ReturnStatement") {
+        // Check if the patch has already been applied
+        if (firstStatement.argument === null || firstStatement.argument === undefined || firstStatement.argument.type !== "Literal" || firstStatement.argument.value !== "public") return;
+        visAppliedCount++;
+        return;
+      };
+      if (firstStatement.type !== "IfStatement") return;
       visCount++;
       statements.unshift(Ast.returnStatement(Ast.literal("public")));
     }
   });
-  if (subCount !== 1 || visCount !== 1) return;
+  if (subAppliedCount == 1 && visAppliedCount == 1 && subCount == 0 && visCount == 0) return print(silent, `Patch was already applied for GitLens version 19.0.1`);
+  if (subAppliedCount == 1 || visAppliedCount == 1) print(silent, `Patch was already partially applied for GitLens version 19.0.1.`);
+  if ((subCount + subAppliedCount) !== 1 || (visCount + visAppliedCount) !== 1) return print(silent, `Failed to apply patch for GitLens version 19.0.1`);
   const newContent = generate(ast, { indent: "", lineEnd: "" });
   await Deno.writeTextFile(filePath, newContent);
+  print(silent, `Patch applied successfully for GitLens version 19.0.1`);
 }
 
 if (import.meta.main) {
@@ -136,9 +169,9 @@ if (import.meta.main) {
     .option("-D, --vsCodeExtensionsDir=<path:string>", "Patch all GitLens extensions found in the specified path.", { conflicts: ["gitLensExtensionDir"] })
     .option("-d, --gitLensExtensionDir=<path:string>", "Patch the GitLens extension found in the specified path.", { conflicts: ["vsCodeExtensionsDir"] })
     .action(async (options, ..._args) => {
-      if (options.gitLensExtensionDir) return await patchExtension(options.gitLensExtensionDir);
-      if (options.vsCodeExtensionsDir) return await patchExtensions(options.vsCodeExtensionsDir);
-      return await patchExtensions();
+      if (options.gitLensExtensionDir) return await patchExtension(options.gitLensExtensionDir, false);
+      if (options.vsCodeExtensionsDir) return await patchExtensions(options.vsCodeExtensionsDir, false);
+      return await patchExtensions(undefined, false);
     })
     .parse();
 }

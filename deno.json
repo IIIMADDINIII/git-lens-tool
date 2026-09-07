@@ -1,6 +1,6 @@
 {
   "name": "@iiimaddiniii/git-lens-tool",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A tool to patch the GitLens extension for Visual Studio Code.",
   "license": "MIT",
   "exports": {
